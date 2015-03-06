@@ -27,6 +27,8 @@
                         <field name="dependency_ids" widget="many2many_tags"/>
                         <field name="modules"/>
                         <field name="token"/>
+                        <field name="default_version"/>
+                        <field name="development_server"/>
                     </group>
                 </sheet>
             </form>
