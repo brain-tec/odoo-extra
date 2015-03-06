@@ -786,6 +786,14 @@ class runbot_build(osv.osv):
         cmd += ['-d', '%s-base' % build.dest, '-i', 'base', '--stop-after-init', '--log-level=test', '--max-cron-threads=0']
         return self.spawn(cmd, lock_path, log_path, cpu_limit=300)
 
+    def job_10_checkout(self, cr, uid, build, lock_path, log_path):
+        build._log('test_base', 'Start test base module')
+        # run base test
+        self.pg_createdb(cr, uid, "%s-base" % build.dest)
+        cmd, mods = build.cmd()
+        cmd += ['-d', '%s-base' % build.dest, '-i', 'base', '--stop-after-init', '--log-level=test', '--max-cron-threads=0']
+        return self.spawn(cmd, lock_path, log_path, cpu_limit=300)
+
     def job_20_test_all(self, cr, uid, build, lock_path, log_path):
         build._log('test_all', 'Start test all modules')
         self.pg_createdb(cr, uid, "%s-all" % build.dest)
