@@ -190,11 +190,16 @@ class runbot_repo(osv.osv):
             string='Extra dependencies',
             help="Community addon repos which need to be present to run tests."),
         'token': fields.char("Github token"),
+        'default_version': fields.char('Default version'),
+        'development_server': fields.char('Development Server'),
+        
     }
     _defaults = {
         'testing': 1,
         'running': 1,
         'auto': True,
+        'development_server': 'brain-tec',
+        'default_version': '7.0'
     }
 
     def domain(self, cr, uid, context=None):
@@ -215,6 +220,11 @@ class runbot_repo(osv.osv):
 
     def git_export(self, cr, uid, ids, treeish, dest, context=None):
         for repo in self.browse(cr, uid, ids, context=context):
+            default_version = repo.default_version
+            development_server = repo.development_server
+            cond = default_version and development_server
+            if cond and development_server not in repo.name and treeish != default_version:
+                 treeish = default_version
             _logger.debug('checkout %s %s %s', repo.name, treeish, dest)
             p1 = subprocess.Popen(['git', '--git-dir=%s' % repo.path, 'archive', treeish], stdout=subprocess.PIPE)
             p2 = subprocess.Popen(['tar', '-xC', dest], stdin=p1.stdout, stdout=subprocess.PIPE)
@@ -773,6 +783,14 @@ class runbot_build(osv.osv):
         cmd, mods = build.cmd()
         if grep(build.server("tools/config.py"), "test-enable"):
             cmd.append("--test-enable")
+        cmd += ['-d', '%s-base' % build.dest, '-i', 'base', '--stop-after-init', '--log-level=test', '--max-cron-threads=0']
+        return self.spawn(cmd, lock_path, log_path, cpu_limit=300)
+
+    def job_10_checkout(self, cr, uid, build, lock_path, log_path):
+        build._log('test_base', 'Start test base module')
+        # run base test
+        self.pg_createdb(cr, uid, "%s-base" % build.dest)
+        cmd, mods = build.cmd()
         cmd += ['-d', '%s-base' % build.dest, '-i', 'base', '--stop-after-init', '--log-level=test', '--max-cron-threads=0']
         return self.spawn(cmd, lock_path, log_path, cpu_limit=300)
 
