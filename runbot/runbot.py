@@ -965,6 +965,7 @@ class runbot_build(osv.osv):
         for build in self.browse(cr, uid, ids, context=context):
             self.pg_dropdb(cr, uid, "%s-base" % build.dest)
             self.pg_dropdb(cr, uid, "%s-all" % build.dest)
+            self.pg_dropdb(cr, uid, "%s-testing" % build.dest)
             if os.path.isdir(build.path()):
                 shutil.rmtree(build.path())
 
