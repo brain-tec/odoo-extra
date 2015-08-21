@@ -145,7 +145,7 @@ def uniq_list(l):
     return OrderedDict.fromkeys(l).keys()
 
 def fqdn():
-    return socket.gethostname()
+    return socket.getfqdn()
 
 #----------------------------------------------------------
 # RunBot Models
@@ -477,6 +477,7 @@ class runbot_build(osv.osv):
         'repo_id': fields.related('branch_id', 'repo_id', type="many2one", relation="runbot.repo", string="Repository", readonly=True, store=True, ondelete='cascade', select=1),
         'name': fields.char('Revno', required=True, select=1),
         'host': fields.char('Host'),
+        'host_port': fields.integer('Host Port'),
         'port': fields.integer('Port'),
         'dest': fields.function(_get_dest, type='char', string='Dest', readonly=1, store=True),
         'domain': fields.function(_get_domain, type='char', string='URL'),
@@ -897,6 +898,7 @@ class runbot_build(osv.osv):
                 port = self.find_port(cr, uid)
                 values = {
                     'host': fqdn(),
+                    'host_port': config['xmlrpc_port'],
                     'port': port,
                     'state': 'testing',
                     'job': jobs[0],
@@ -964,6 +966,7 @@ class runbot_build(osv.osv):
         for build in self.browse(cr, uid, ids, context=context):
             self.pg_dropdb(cr, uid, "%s-base" % build.dest)
             self.pg_dropdb(cr, uid, "%s-all" % build.dest)
+            self.pg_dropdb(cr, uid, "%s-testing" % build.dest)
             if os.path.isdir(build.path()):
                 shutil.rmtree(build.path())
 
