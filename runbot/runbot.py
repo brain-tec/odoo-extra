@@ -738,7 +738,7 @@ class runbot_build(osv.osv):
                 resource.setrlimit(resource.RLIMIT_CPU, (cpu_time + cpu_limit, hard))
             # close parent files
             os.closerange(3, os.sysconf("SC_OPEN_MAX"))
-            lock(lock_path)
+            
         out=open(log_path,"w")
         _logger.debug("spawn: %s stdout: %s", ' '.join(cmd), log_path)
         p=subprocess.Popen(cmd, stdout=out, stderr=out, preexec_fn=preexec_fn, shell=shell)
@@ -938,6 +938,7 @@ class runbot_build(osv.osv):
                 build.logger('running %s', build.job)
                 job_method = getattr(self,build.job)
                 lock_path = build.path('logs', '%s.lock' % build.job)
+                lock(lock_path)
                 log_path = build.path('logs', '%s.txt' % build.job)
                 pid = job_method(cr, uid, build, lock_path, log_path)
                 build.write({'pid': pid})
