@@ -280,14 +280,14 @@ class runbot_repo(models.Model):
         nginx_dir = os.path.join(self._root(), 'nginx')
         settings['nginx_dir'] = nginx_dir
         settings['re_escape'] = re.escape
-        ids = self.search([('nginx', '=', True)], order='id')
-        if ids:
-            build_ids = self.env['runbot.build'].search([('repo_id', 'in', ids), ('state', '=', 'running')])
-            settings['builds'] = self.env['runbot.build'].browse(build_ids)
+        nginx_repos = self.search([('nginx', '=', True)], order='id')
+        if nginx_repos:
+            builds = self.env['runbot.build'].search([('repo_id', 'in', nginx_repos.ids), ('state', '=', 'running')])
+            settings['builds'] = self.env['runbot.build'].browse(builds.ids)
 
-            nginx_config = self.env['ir.ui.view'].render("runbot.nginx_config", settings)
-            os.makedirs([nginx_dir])
-            open(os.path.join(nginx_dir, 'nginx.conf'), 'w').write(nginx_config)
+            nginx_config = self.env['ir.ui.view'].render_template("runbot.nginx_config", settings)
+            os.makedirs(nginx_dir, exist_ok=True)
+            open(os.path.join(nginx_dir, 'nginx.conf'), 'wb').write(nginx_config)
             try:
                 _logger.debug('reload nginx')
                 pid = int(open(os.path.join(nginx_dir, 'nginx.pid')).read().strip(' \n'))
